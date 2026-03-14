@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreInventory - Receipts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0f0c29, #302b63, #24243e);
+            padding: 20px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.3);
+        }
+
+        .sidebar-logo {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+
+        .sidebar-logo h2 {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .sidebar-logo p {
+            color: rgba(255,255,255,0.4);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 15px;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(17,153,142,0.5);
+        }
+
+        .ops-menu {
+            display: none;
+            padding-left: 15px;
+            margin-bottom: 5px;
+        }
+
+        .ops-menu.open { display: block; }
+
+        .ops-menu .nav-item {
+            font-size: 13px;
+            padding: 10px 15px;
+        }
+
+        .main {
+            margin-left: 250px;
+            padding: 30px;
+            width: calc(100% - 250px);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 25px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 15px 40px rgba(17,153,142,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '📥';
+            position: absolute;
+            right: 180px;
+            top: -10px;
+            font-size: 100px;
+            opacity: 0.1;
+        }
+
+        .page-header h1 { font-size: 28px; font-weight: 800; }
+        .page-header p  { opacity: 0.9; font-size: 14px; margin-top: 5px; }
+
+        .header-stat {
+            text-align: center;
+            background: rgba(255,255,255,0.25);
+            padding: 12px 22px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .header-stat .num { font-size: 24px; font-weight: 800; }
+        .header-stat .lbl { font-size: 11px; opacity: 0.9; }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header-row h3 { margin-bottom: 0; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-size: 13px; font-weight: 700; color: #555; }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #11998e;
+            box-shadow: 0 0 0 3px rgba(17,153,142,0.1);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(17,153,142,0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(17,153,142,0.5);
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102,126,234,0.5);
+        }
+
+        .error-msg {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: linear-gradient(135deg, #f0fdf9, #e8fdf5); }
+
+        th {
+            text-align: left;
+            font-size: 12px;
+            color: #11998e;
+            font-weight: 800;
+            padding: 14px 15px;
+            border-bottom: 2px solid #d1fae5;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        td {
+            padding: 14px 15px;
+            font-size: 13px;
+            color: #333;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        tr:hover td { background: #f0fdf9; }
+
+        .ref-link {
+            color: #11998e;
+            font-weight: 800;
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .ref-link:hover { text-decoration: underline; }
+
+        .status-badge {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .status-ready   { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+        .status-waiting { background: linear-gradient(135deg, #fef9c3, #fef08a); color: #a16207; }
+        .status-done    { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; }
+
+        .location-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #f3f4f6;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .empty-state { text-align: center; padding: 40px; color: #888; }
+        .empty-state .empty-icon { font-size: 50px; margin-bottom: 10px; }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 14px;
+            color: white;
+            display: none;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.show { display: block; }
+        .toast-success { background: linear-gradient(135deg, #11998e, #38ef7d); }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(60px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ── PRINT STYLES ── */
+        .print-header { display: none; }
+
+        @media print {
+            body { background: white !important; display: block !important; }
+
+            .sidebar,
+            .page-header,
+            .card:first-of-type,
+            .btn-print,
+            .toast { display: none !important; }
+
+            .main {
+                margin-left: 0 !important;
+                padding: 10px !important;
+                width: 100% !important;
+            }
+
+            .card { box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
+
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 20px;
+                padding-bottom: 12px;
+                border-bottom: 2px solid #11998e;
+            }
+
+            .print-header h2 { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+            .print-header p  { font-size: 12px; color: #666; margin-top: 4px; }
+
+            th {
+                background: #f0fdf9 !important;
+                color: #11998e !important;
+                border: 1px solid #d1fae5 !important;
+                font-size: 11px;
+                padding: 10px 12px;
+            }
+
+            td { border: 1px solid #e5e7eb !important; font-size: 12px; padding: 10px 12px; }
+            tr:hover td { background: white !important; }
+
+            .status-badge, .location-tag, .ref-link {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <h2>📦 CoreInventory</h2>
+        <p>Smart Warehouse Management</p>
+    </div>
+    <a href="/dashboard" class="nav-item">
+        <span>🏠</span> Dashboard
+    </a>
+    <div class="nav-item" onclick="toggleOps()">
+        <span>⚙️</span> Operations
+        <span id="opsArrow" style="margin-left:auto;font-size:11px">▼</span>
+    </div>
+    <div class="ops-menu open" id="opsMenu">
+        <a href="/receipts" class="nav-item active">
+            <span>📥</span> Receipts
+        </a>
+        <a href="/delivery" class="nav-item">
+            <span>🚚</span> Delivery
+        </a>
+        <a href="/adjustment" class="nav-item">
+            <span>✏️</span> Adjustment
+        </a>
+    </div>
+    <a href="/transfer" class="nav-item">
+        <span>🔄</span> Internal Transfer
+    </a>
+    <a href="/stock" class="nav-item">
+        <span>📦</span> Stock
+    </a>
+    <a href="/move_history" class="nav-item">
+        <span>📋</span> Move History
+    </a>
+    <a href="/settings" class="nav-item">
+        <span>🔧</span> Settings
+    </a>
+    <a href="/logout" class="nav-item" style="margin-top:10px;">
+        <span>🚪</span> Logout
+    </a>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+    <div class="page-header">
+        <div>
+            <h1>📥 Receipts</h1>
+            <p>Manage all incoming stock receipts</p>
+        </div>
+        <div class="header-stat">
+            <div class="num">{{ movements|length if movements else '0' }}</div>
+            <div class="lbl">Total Receipts</div>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="error-msg">❌ {{ error }}</div>
+    {% endif %}
+
+    <!-- New Receipt Form -->
+    <div class="card">
+        <h3>➕ New Receipt</h3>
+        <form method="POST" action="/receipts">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>📦 Select Product</label>
+                    <select name="product_id" required>
+                        <option value="">-- Select Product --</option>
+                        {% for product in products %}
+                        <option value="{{ product.id }}">
+                            {{ product.name }} (Stock: {{ product.quantity }} {{ product.unit }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🔢 Quantity</label>
+                    <input type="number" name="quantity"
+                           placeholder="Enter quantity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>🏭 From (Supplier / Source)</label>
+                    <input type="text" name="source_location"
+                           placeholder="e.g. Vendor, Supplier Name">
+                </div>
+                <div class="form-group">
+                    <label>🏬 To (Destination Warehouse)</label>
+                    <input type="text" name="dest_location"
+                           placeholder="e.g. WH/Stock1">
+                </div>
+                <div class="form-group">
+                    <label>👤 Contact (Vendor / Supplier)</label>
+                    <input type="text" name="contact"
+                           placeholder="e.g. Azure Interior">
+                </div>
+                <div class="form-group">
+                    <label>📅 Schedule Date</label>
+                    <input type="date" name="schedule_date">
+                </div>
+                <div class="form-group">
+                    <label>🔖 Status</label>
+                    <select name="status">
+                        <option value="Ready">Ready</option>
+                        <option value="Waiting">Waiting</option>
+                        <option value="Done">Done</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label>📝 Note</label>
+                    <textarea name="note" rows="2"
+                              placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                📥 Add Receipt
+            </button>
+        </form>
+    </div>
+
+    <!-- Receipt History Table -->
+    <div class="card">
+
+        <!-- Shown only when printing -->
+        <div class="print-header">
+            <h2>📦 CoreInventory — Receipt History</h2>
+            <p>Printed on: <span id="printDate"></span></p>
+        </div>
+
+        <div class="card-header-row">
+            <h3>📋 Receipt History</h3>
+            <button class="btn btn-print" onclick="printTable()">
+                🖨️ Print
+            </button>
+        </div>
+
+        {% if movements %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Contact</th>
+                    <th>Schedule Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for move in movements %}
+                <tr>
+                    <td>
+                        <a href="/receipts/{{ move.id }}" class="ref-link">
+                            WH/IN/{{ '%04d' % move.id }}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="location-tag">
+                            🏭 {{ move.source_location if move.source_location else 'Vendor' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="location-tag">
+                            🏬 {{ move.dest_location if move.dest_location else 'WH/Stock1' }}
+                        </span>
+                    </td>
+                    <td>{{ move.contact if move.contact else move.note or '—' }}</td>
+                    <td>
+                        {% if move.schedule_date %}
+                            {{ move.schedule_date.strftime('%d-%m-%Y') if move.schedule_date is not string else move.schedule_date }}
+                        {% else %}
+                            {{ move.date.strftime('%d-%m-%Y') if move.date is not string else move.date }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set s = move.status if move.status else 'Ready' %}
+                        {% if s == 'Done' %}
+                            <span class="status-badge status-done">✅ Done</span>
+                        {% elif s == 'Waiting' %}
+                            <span class="status-badge status-waiting">⏳ Waiting</span>
+                        {% else %}
+                            <span class="status-badge status-ready">🔵 Ready</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📥</div>
+            <p>No receipts yet!</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    function toggleOps() {
+        const menu  = document.getElementById('opsMenu');
+        const arrow = document.getElementById('opsArrow');
+        menu.classList.toggle('open');
+        arrow.textContent = menu.classList.contains('open') ? '▲' : '▼';
+    }
+
+    function printTable() {
+        document.getElementById('printDate').textContent =
+            new Date().toLocaleString();
+        window.print();
+    }
+</script>
+
+</body>
+</html>

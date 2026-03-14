@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreInventory - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            width: 420px;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            font-size: 32px;
+            font-weight: 800;
+        }
+
+        .logo p {
+            color: #888;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+        }
+
+        input.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239,68,68,0.1);
+        }
+
+        input.success {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,0.1);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .error-msg.show { display: block; }
+
+        .password-wrapper { position: relative; }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            user-select: none;
+        }
+
+        .forgot-link {
+            text-align: right;
+            margin-top: 8px;
+        }
+
+        .forgot-link a {
+            color: #2563eb;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .forgot-link a:hover { text-decoration: underline; }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37,99,235,0.4);
+        }
+
+        .btn-login:active { transform: translateY(0); }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #aaa;
+            font-size: 13px;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+
+        .bottom-text {
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .bottom-text a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .bottom-text a:hover { text-decoration: underline; }
+
+        /* ── Popups ── */
+        .success-popup {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 5px 20px rgba(34,197,94,0.4);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+
+        .error-popup {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #eb3349, #f45c43);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 5px 20px rgba(235,51,73,0.4);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ── OTP Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(6px);
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 24px;
+            width: 400px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+            animation: popUp 0.3s ease;
+            overflow: hidden;
+        }
+
+        @keyframes popUp {
+            from { opacity: 0; transform: scale(0.8); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            padding: 25px 30px;
+            color: white;
+            text-align: center;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .modal-header p {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 5px;
+        }
+
+        .modal-body { padding: 30px; }
+
+        .step { display: none; }
+        .step.show { display: block; }
+
+        .modal-body label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #555;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .modal-body input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .modal-body input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+
+        .otp-display {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 2px solid #bae6fd;
+            border-radius: 14px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .otp-display p {
+            font-size: 12px;
+            color: #0284c7;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .otp-code {
+            font-size: 36px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 10px;
+        }
+
+        .otp-timer {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .otp-inputs input {
+            width: 55px;
+            height: 55px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 800;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s;
+            margin-bottom: 0;
+            padding: 0;
+        }
+
+        .otp-inputs input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+
+        .resend-text {
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .resend-text a {
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-modal {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37,99,235,0.4);
+        }
+
+        .btn-cancel {
+            width: 100%;
+            padding: 11px;
+            background: #f3f4f6;
+            color: #555;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-cancel:hover { background: #e5e7eb; }
+    </style>
+</head>
+<body>
+
+    <!-- Popups -->
+    <div class="success-popup" id="successPopup">
+        ✅ Login Successful! Redirecting...
+    </div>
+    <div class="error-popup" id="errorPopup"></div>
+
+    <!-- OTP Modal -->
+    <div class="modal-overlay" id="otpModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>🔐 Reset Password</h3>
+                <p>Verify your identity with OTP</p>
+            </div>
+            <div class="modal-body">
+
+                <!-- Step 1 -->
+                <div class="step show" id="step1">
+                    <label>👤 Username</label>
+                    <input type="text" id="resetUsername"
+                           placeholder="Enter your username">
+                    <label>📧 Email</label>
+                    <input type="email" id="resetEmail"
+                           placeholder="Enter your registered email">
+                    <button class="btn-modal"
+                            onclick="sendOTP()">
+                        📨 Send OTP
+                    </button>
+                    <button class="btn-cancel"
+                            onclick="closeModal()">
+                        Cancel
+                    </button>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step" id="step2">
+                    <div class="otp-display">
+                        <p>📱 Your OTP Code is:</p>
+                        <div class="otp-code" id="otpDisplay">----</div>
+                        <div class="otp-timer" id="otpTimer">
+                            ⏱️ Expires in 60 seconds
+                        </div>
+                    </div>
+                    <label>🔢 Enter OTP</label>
+                    <div class="otp-inputs">
+                        <input type="text" maxlength="1" id="o1"
+                               oninput="moveNext(this,'o2')">
+                        <input type="text" maxlength="1" id="o2"
+                               oninput="moveNext(this,'o3')">
+                        <input type="text" maxlength="1" id="o3"
+                               oninput="moveNext(this,'o4')">
+                        <input type="text" maxlength="1" id="o4"
+                               oninput="moveNext(this,null)">
+                    </div>
+                    <div class="resend-text">
+                        Didn't get it?
+                        <a onclick="resendOTP()">Resend OTP</a>
+                    </div>
+                    <button class="btn-modal"
+                            onclick="verifyOTP()">
+                        ✅ Verify OTP
+                    </button>
+                    <button class="btn-cancel"
+                            onclick="closeModal()">Cancel</button>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step" id="step3">
+                    <label>🔒 New Password</label>
+                    <input type="password" id="newPassword"
+                           placeholder="Enter new password">
+                    <label>🔒 Confirm New Password</label>
+                    <input type="password" id="confirmNewPassword"
+                           placeholder="Repeat new password">
+                    <button class="btn-modal"
+                            onclick="resetPassword()">
+                        💾 Reset Password
+                    </button>
+                    <button class="btn-cancel"
+                            onclick="closeModal()">Cancel</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Box -->
+    <div class="login-box">
+        <div class="logo">
+            <h1>📦 CoreInventory</h1>
+            <p>Smart Warehouse Management System</p>
+        </div>
+
+        <div class="form-group">
+            <label>👤 Username</label>
+            <input type="text" id="username"
+                   placeholder="Enter your username"
+                   oninput="validateUsername()">
+            <span class="error-msg" id="usernameError"></span>
+        </div>
+
+        <div class="form-group">
+            <label>🔒 Password</label>
+            <div class="password-wrapper">
+                <input type="password" id="password"
+                       placeholder="Enter your password"
+                       oninput="validatePassword()">
+                <span class="toggle-password"
+                      onclick="togglePassword()">👁️</span>
+            </div>
+            <span class="error-msg" id="passwordError"></span>
+            <div class="forgot-link">
+                <a onclick="openModal()">🔑 Forgot Password?</a>
+            </div>
+        </div>
+
+        <button class="btn-login" onclick="handleLogin()">
+            🚀 Login
+        </button>
+
+        <div class="divider">or</div>
+
+        <div class="bottom-text">
+            Don't have an account?
+            <a href="/register">Register Now</a>
+        </div>
+    </div>
+
+    <script>
+        let generatedOTP = '';
+        let otpInterval  = null;
+        let timerSeconds = 60;
+
+        // ── Handle Login ──
+        function handleLogin() {
+            const isUsernameValid = validateUsername();
+            const isPasswordValid = validatePassword();
+            if (isUsernameValid && isPasswordValid) {
+                triggerLogin();
+            }
+        }
+
+        // ── Trigger Login — checks backend ──
+        function triggerLogin() {
+            const username = document.getElementById('username')
+                                     .value.trim();
+            const password = document.getElementById('password').value;
+
+            const btn = document.querySelector('.btn-login');
+            btn.textContent = '⏳ Logging in...';
+            btn.disabled    = true;
+
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // ✅ Correct details — go to dashboard
+                    const popup = document.getElementById('successPopup');
+                    popup.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    // ❌ Wrong details — show error
+                    btn.textContent = '🚀 Login';
+                    btn.disabled    = false;
+                    showErrorPopup(data.message ||
+                        'Invalid username or password!');
+                }
+            })
+            .catch(() => {
+                btn.textContent = '🚀 Login';
+                btn.disabled    = false;
+                showErrorPopup('Something went wrong! Try again.');
+            });
+        }
+
+        // ── Validate Username ──
+        function validateUsername() {
+            const el  = document.getElementById('username');
+            const err = document.getElementById('usernameError');
+            const val = el.value.trim();
+            if (val === '') {
+                setError(el, err, 'Username cannot be empty!');
+                return false;
+            } else if (val.length < 3) {
+                setError(el, err, 'At least 3 characters required!');
+                return false;
+            } else {
+                setSuccess(el, err);
+                return true;
+            }
+        }
+
+        // ── Validate Password ──
+        function validatePassword() {
+            const el  = document.getElementById('password');
+            const err = document.getElementById('passwordError');
+            const val = el.value;
+            if (val === '') {
+                setError(el, err, 'Password cannot be empty!');
+                return false;
+            } else if (val.length < 6) {
+                setError(el, err, 'At least 6 characters required!');
+                return false;
+            } else {
+                setSuccess(el, err);
+                return true;
+            }
+        }
+
+        // ── Toggle Password ──
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon  = document.querySelector('.toggle-password');
+            if (input.type === 'password') {
+                input.type       = 'text';
+                icon.textContent = '🙈';
+            } else {
+                input.type       = 'password';
+                icon.textContent = '👁️';
+            }
+        }
+
+        // ── OTP Modal ──
+        function openModal() {
+            document.getElementById('otpModal')
+                    .classList.add('show');
+            showStep('step1');
+        }
+
+        function closeModal() {
+            document.getElementById('otpModal')
+                    .classList.remove('show');
+            clearInterval(otpInterval);
+            document.getElementById('resetUsername').value = '';
+            document.getElementById('resetEmail').value    = '';
+            ['o1','o2','o3','o4'].forEach(id =>
+                document.getElementById(id).value = '');
+            document.getElementById('newPassword').value        = '';
+            document.getElementById('confirmNewPassword').value = '';
+        }
+
+        function showStep(stepId) {
+            ['step1','step2','step3'].forEach(s =>
+                document.getElementById(s).classList.remove('show'));
+            document.getElementById(stepId).classList.add('show');
+        }
+
+        function sendOTP() {
+            const username = document.getElementById('resetUsername')
+                                     .value.trim();
+            const email    = document.getElementById('resetEmail')
+                                     .value.trim();
+            if (!username || !email) {
+                alert('⚠️ Please fill both fields!');
+                return;
+            }
+            generatedOTP = Math.floor(1000 + Math.random() * 9000)
+                               .toString();
+            document.getElementById('otpDisplay').textContent =
+                generatedOTP;
+            timerSeconds = 60;
+            clearInterval(otpInterval);
+            otpInterval = setInterval(() => {
+                timerSeconds--;
+                document.getElementById('otpTimer').textContent =
+                    `⏱️ Expires in ${timerSeconds} seconds`;
+                if (timerSeconds <= 0) {
+                    clearInterval(otpInterval);
+                    document.getElementById('otpTimer').textContent =
+                        '❌ OTP Expired! Resend.';
+                    document.getElementById('otpDisplay').textContent =
+                        'XXXX';
+                    generatedOTP = '';
+                }
+            }, 1000);
+            showStep('step2');
+        }
+
+        function resendOTP() {
+            generatedOTP = Math.floor(1000 + Math.random() * 9000)
+                               .toString();
+            document.getElementById('otpDisplay').textContent =
+                generatedOTP;
+            timerSeconds = 60;
+            clearInterval(otpInterval);
+            otpInterval = setInterval(() => {
+                timerSeconds--;
+                document.getElementById('otpTimer').textContent =
+                    `⏱️ Expires in ${timerSeconds} seconds`;
+                if (timerSeconds <= 0) {
+                    clearInterval(otpInterval);
+                    document.getElementById('otpTimer').textContent =
+                        '❌ OTP Expired!';
+                    generatedOTP = '';
+                }
+            }, 1000);
+        }
+
+        function moveNext(current, nextId) {
+            if (current.value.length === 1 && nextId) {
+                document.getElementById(nextId).focus();
+            }
+        }
+
+        function verifyOTP() {
+            const entered =
+                document.getElementById('o1').value +
+                document.getElementById('o2').value +
+                document.getElementById('o3').value +
+                document.getElementById('o4').value;
+            if (entered.length < 4) {
+                alert('⚠️ Enter all 4 digits!');
+                return;
+            }
+            if (generatedOTP === '') {
+                alert('❌ OTP expired! Please resend.');
+                return;
+            }
+            if (entered === generatedOTP) {
+                clearInterval(otpInterval);
+                showStep('step3');
+            } else {
+                alert('❌ Wrong OTP! Try again.');
+                ['o1','o2','o3','o4'].forEach(id =>
+                    document.getElementById(id).value = '');
+                document.getElementById('o1').focus();
+            }
+        }
+
+        function resetPassword() {
+            const newPass  = document.getElementById('newPassword').value;
+            const confPass = document.getElementById('confirmNewPassword')
+                                     .value;
+            if (newPass.length < 6) {
+                alert('⚠️ Password must be at least 6 characters!');
+                return;
+            }
+            if (newPass !== confPass) {
+                alert('❌ Passwords do not match!');
+                return;
+            }
+            closeModal();
+            const popup = document.getElementById('successPopup');
+            popup.textContent   = '✅ Password Reset Successfully!';
+            popup.style.display = 'block';
+            setTimeout(() => {
+                popup.style.display = 'none';
+                popup.textContent   =
+                    '✅ Login Successful! Redirecting...';
+            }, 2500);
+        }
+
+        // ── Show Error Popup ──
+        function showErrorPopup(msg) {
+            const err = document.getElementById('errorPopup');
+            err.textContent   = '❌ ' + msg;
+            err.style.display = 'block';
+            setTimeout(() => {
+                err.style.display = 'none';
+            }, 3000);
+        }
+
+        // ── Helpers ──
+        function setError(input, errorEl, message) {
+            input.classList.remove('success');
+            input.classList.add('error');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function setSuccess(input, errorEl) {
+            input.classList.remove('error');
+            input.classList.add('success');
+            errorEl.classList.remove('show');
+        }
+    </script>
+
+</body>
+</html>

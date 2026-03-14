@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreInventory - Internal Transfer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0f0c29, #302b63, #24243e);
+            padding: 20px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.3);
+        }
+
+        .sidebar-logo {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+
+        .sidebar-logo h2 {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .sidebar-logo p {
+            color: rgba(255,255,255,0.4);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 15px;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79,172,254,0.5);
+        }
+
+        .ops-menu {
+            display: none;
+            padding-left: 15px;
+            margin-bottom: 5px;
+        }
+
+        .ops-menu.open { display: block; }
+
+        .ops-menu .nav-item {
+            font-size: 13px;
+            padding: 10px 15px;
+        }
+
+        .main {
+            margin-left: 250px;
+            padding: 30px;
+            width: calc(100% - 250px);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 25px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 15px 40px rgba(79,172,254,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '🔄';
+            position: absolute;
+            right: 180px;
+            top: -10px;
+            font-size: 100px;
+            opacity: 0.1;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .page-header p {
+            opacity: 0.9;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .kpi-mini {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.3s;
+        }
+
+        .kpi-mini:hover { transform: translateY(-5px); }
+
+        .kpi-mini-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .icon-blue   {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+        .icon-purple {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        .icon-green  {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+        }
+
+        .kpi-mini-info .num {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1a1a2e;
+        }
+
+        .kpi-mini-info .lbl {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 10px 15px;
+            gap: 8px;
+            flex: 1;
+            max-width: 350px;
+            transition: all 0.3s;
+        }
+
+        .search-box:focus-within {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79,172,254,0.1);
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .btn {
+            padding: 11px 22px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .btn-blue {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79,172,254,0.4);
+        }
+
+        .btn-blue:hover {
+            transform: translateY(-2px);
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead {
+            background: linear-gradient(135deg, #e8f7ff, #d0efff);
+        }
+
+        th {
+            text-align: left;
+            font-size: 12px;
+            color: #0284c7;
+            font-weight: 800;
+            padding: 14px 15px;
+            border-bottom: 2px solid #bae6fd;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        td {
+            padding: 15px;
+            font-size: 13px;
+            color: #333;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        tr:hover td { background: #f0f9ff; }
+
+        .loc-badge {
+            background: linear-gradient(135deg, #e8f7ff, #d0efff);
+            color: #0284c7;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .status {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .status-ready {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+        }
+
+        .status-waiting {
+            background: linear-gradient(135deg, #fff3cd, #ffeeba);
+            color: #856404;
+        }
+
+        .status-done {
+            background: linear-gradient(135deg, #cce5ff, #b8daff);
+            color: #004085;
+        }
+
+        /* ── Form ── */
+        .form-section { display: none; }
+        .form-section.show { display: block; }
+        .list-section { display: block; }
+        .list-section.hide { display: none; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79,172,254,0.1);
+        }
+
+        .transfer-visual {
+            background: linear-gradient(135deg, #e8f7ff, #d0efff);
+            border: 2px solid #bae6fd;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .location-box {
+            background: white;
+            border: 2px solid #bae6fd;
+            border-radius: 14px;
+            padding: 15px 25px;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .location-box .loc-label {
+            font-size: 11px;
+            color: #888;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .location-box .loc-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0284c7;
+        }
+
+        .transfer-icon {
+            font-size: 30px;
+            animation: moveRight 1.5s infinite;
+        }
+
+        @keyframes moveRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(8px); }
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: #4facfe;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 15px;
+            padding: 8px 0;
+        }
+
+        .products-section {
+            border: 2px solid #bae6fd;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .products-header {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            padding: 14px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .product-header-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 80px;
+            gap: 10px;
+            padding: 10px 15px;
+            background: #e8f7ff;
+            border-bottom: 1px solid #bae6fd;
+        }
+
+        .product-header-row span {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0284c7;
+            text-transform: uppercase;
+        }
+
+        .product-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 80px;
+            gap: 10px;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f5f5f5;
+            align-items: center;
+        }
+
+        .product-row input,
+        .product-row select {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            width: 100%;
+        }
+
+        .btn-remove {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-add-product {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 20px;
+            color: #4facfe;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            width: 100%;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(17,153,142,0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349, #f45c43);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: white;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .status-flow {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #e8f7ff, #d0efff);
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            border: 1px solid #bae6fd;
+        }
+
+        .flow-step {
+            color: #ccc;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .flow-step.active {
+            color: white;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            box-shadow: 0 3px 10px rgba(79,172,254,0.4);
+        }
+
+        .flow-step.done {
+            color: #11998e;
+            background: #e8fdf5;
+        }
+
+        .flow-arrow { color: #ddd; font-size: 12px; }
+
+        .reference-tag {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 14px;
+            color: white;
+            display: none;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.show { display: block; }
+        .toast-success {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+        }
+        .toast-warning {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(60px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <h2>📦 CoreInventory</h2>
+        <p>Smart Warehouse Management</p>
+    </div>
+    <a href="/dashboard" class="nav-item">
+        <span>🏠</span> Dashboard
+    </a>
+    <div class="nav-item" onclick="toggleOps()">
+        <span>⚙️</span> Operations
+        <span id="opsArrow"
+              style="margin-left:auto;font-size:11px">▼</span>
+    </div>
+    <div class="ops-menu" id="opsMenu">
+        <a href="/receipts" class="nav-item">
+            <span>📥</span> Receipts
+        </a>
+        <a href="/delivery" class="nav-item">
+            <span>🚚</span> Delivery
+        </a>
+        <a href="/adjustment" class="nav-item">
+            <span>✏️</span> Adjustment
+        </a>
+    </div>
+    <a href="/transfer" class="nav-item active">
+        <span>🔄</span> Internal Transfer
+    </a>
+    <a href="/stock" class="nav-item">
+        <span>📦</span> Stock
+    </a>
+    <a href="/move_history" class="nav-item">
+        <span>📋</span> Move History
+    </a>
+    <a href="/settings" class="nav-item">
+        <span>🔧</span> Settings
+    </a>
+    <a href="/logout" class="nav-item" style="margin-top:10px;">
+        <span>🚪</span> Logout
+    </a>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+    <!-- LIST VIEW -->
+    <div class="list-section" id="listSection">
+
+        <div class="page-header">
+            <div>
+                <h1>🔄 Internal Transfer</h1>
+                <p>Move stock between warehouse locations</p>
+            </div>
+        </div>
+
+        <div class="kpi-row">
+            <div class="kpi-mini">
+                <div class="kpi-mini-icon icon-blue">🔄</div>
+                <div class="kpi-mini-info">
+                    <div class="num">8</div>
+                    <div class="lbl">Total Transfers</div>
+                </div>
+            </div>
+            <div class="kpi-mini">
+                <div class="kpi-mini-icon icon-purple">⏳</div>
+                <div class="kpi-mini-info">
+                    <div class="num">3</div>
+                    <div class="lbl">Pending</div>
+                </div>
+            </div>
+            <div class="kpi-mini">
+                <div class="kpi-mini-icon icon-green">✅</div>
+                <div class="kpi-mini-info">
+                    <div class="num">5</div>
+                    <div class="lbl">Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="action-bar">
+                <button class="btn btn-blue"
+                        onclick="showForm('new')">
+                    ➕ New Transfer
+                </button>
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text"
+                           placeholder="Search transfers..."
+                           oninput="searchTransfer(this.value)">
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>From → To</th>
+                        <th>Contact</th>
+                        <th>Schedule Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="transferBody">
+                    <tr onclick="showForm('WH/INT/0001')">
+                        <td><strong>WH/INT/0001</strong></td>
+                        <td>
+                            <span class="loc-badge">WH/Stock1</span>
+                            ➡️
+                            <span class="loc-badge">WH/Production</span>
+                        </td>
+                        <td>Azure Interior</td>
+                        <td>01/12/2024</td>
+                        <td>
+                            <span class="status status-ready">
+                                ✅ Ready
+                            </span>
+                        </td>
+                    </tr>
+                    <tr onclick="showForm('WH/INT/0002')">
+                        <td><strong>WH/INT/0002</strong></td>
+                        <td>
+                            <span class="loc-badge">WH/Stock2</span>
+                            ➡️
+                            <span class="loc-badge">WH/Stock1</span>
+                        </td>
+                        <td>Global Supplies</td>
+                        <td>02/12/2024</td>
+                        <td>
+                            <span class="status status-waiting">
+                                ⏳ Waiting
+                            </span>
+                        </td>
+                    </tr>
+                    <tr onclick="showForm('WH/INT/0003')">
+                        <td><strong>WH/INT/0003</strong></td>
+                        <td>
+                            <span class="loc-badge">WH/Production</span>
+                            ➡️
+                            <span class="loc-badge">WH/Stock2</span>
+                        </td>
+                        <td>Local Vendor</td>
+                        <td>03/12/2024</td>
+                        <td>
+                            <span class="status status-done">
+                                🎉 Done
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FORM VIEW -->
+    <div class="form-section" id="formSection">
+
+        <button class="btn-back" onclick="showList()">
+            ← Back to Transfers
+        </button>
+
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;
+                        align-items:center;margin-bottom:20px;
+                        flex-wrap:wrap;gap:10px">
+                <h3 style="margin:0">🔄 Internal Transfer</h3>
+                <div class="form-actions" style="margin:0">
+                    <button class="btn btn-blue"
+                            onclick="showForm('new')">
+                        New
+                    </button>
+                    <button class="btn btn-success"
+                            onclick="validateTransfer()">
+                        ✅ Validate
+                    </button>
+                    <button class="btn btn-warning"
+                            onclick="printTransfer()">
+                        🖨️ Print
+                    </button>
+                    <button class="btn btn-danger"
+                            onclick="cancelTransfer()">
+                        ❌ Cancel
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-flow">
+                <span class="flow-step done"
+                      id="step-draft">Draft</span>
+                <span class="flow-arrow">▶</span>
+                <span class="flow-step active"
+                      id="step-waiting">Waiting</span>
+                <span class="flow-arrow">▶</span>
+                <span class="flow-step"
+                      id="step-ready">Ready</span>
+                <span class="flow-arrow">▶</span>
+                <span class="flow-step"
+                      id="step-done">Done</span>
+            </div>
+
+            <div class="reference-tag" id="referenceTag">
+                WH/INT/0001
+            </div>
+
+            <div class="transfer-visual">
+                <div class="location-box">
+                    <div class="loc-label">From Location</div>
+                    <div class="loc-name" id="fromLocDisplay">
+                        WH/Stock1
+                    </div>
+                </div>
+                <div class="transfer-icon">➡️</div>
+                <div class="location-box">
+                    <div class="loc-label">To Location</div>
+                    <div class="loc-name" id="toLocDisplay">
+                        WH/Production
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>📤 From Location</label>
+                    <select id="fromLoc"
+                            onchange="updateVisual()">
+                        <option>WH/Stock1</option>
+                        <option>WH/Stock2</option>
+                        <option>WH/Production</option>
+                        <option>WH/Delivery</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📥 To Location</label>
+                    <select id="toLoc"
+                            onchange="updateVisual()">
+                        <option>WH/Production</option>
+                        <option>WH/Stock1</option>
+                        <option>WH/Stock2</option>
+                        <option>WH/Delivery</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📅 Schedule Date</label>
+                    <input type="date" id="scheduleDate">
+                </div>
+                <div class="form-group">
+                    <label>👤 Responsible</label>
+                    <input type="text" id="responsible"
+                           placeholder="Person responsible">
+                </div>
+            </div>
+
+            <div class="products-section">
+                <div class="products-header">
+                    📋 Products to Transfer
+                </div>
+                <div class="product-header-row">
+                    <span>Product</span>
+                    <span>Quantity</span>
+                    <span>Unit</span>
+                    <span>Remove</span>
+                </div>
+                <div id="productRows">
+                    <div class="product-row">
+                        <input type="text"
+                               value="Steel Rods"
+                               placeholder="Product name">
+                        <input type="number"
+                               value="20" min="0">
+                        <select>
+                            <option>kg</option>
+                            <option>pcs</option>
+                            <option>bags</option>
+                            <option>boxes</option>
+                        </select>
+                        <button class="btn-remove"
+                                onclick="removeProduct(this)">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+                <button class="btn-add-product"
+                        onclick="addProduct()">
+                    ➕ Add Product
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let transferCounter = 4;
+    let currentStatus   = 'waiting';
+
+    function toggleOps() {
+        const menu  = document.getElementById('opsMenu');
+        const arrow = document.getElementById('opsArrow');
+        menu.classList.toggle('open');
+        arrow.textContent =
+            menu.classList.contains('open') ? '▲' : '▼';
+    }
+
+    function showForm(ref) {
+        document.getElementById('listSection')
+                .classList.add('hide');
+        document.getElementById('formSection')
+                .classList.add('show');
+        if (ref === 'new') {
+            document.getElementById('referenceTag')
+                    .textContent =
+                `WH/INT/000${transferCounter++}`;
+            document.getElementById('scheduleDate').value = '';
+            document.getElementById('responsible').value  = '';
+            setStatus('draft');
+        } else {
+            document.getElementById('referenceTag')
+                    .textContent = ref;
+            document.getElementById('scheduleDate').value =
+                '2024-12-01';
+            document.getElementById('responsible').value  =
+                'Admin';
+            setStatus('waiting');
+        }
+        updateVisual();
+    }
+
+    function showList() {
+        document.getElementById('listSection')
+                .classList.remove('hide');
+        document.getElementById('formSection')
+                .classList.remove('show');
+    }
+
+    function updateVisual() {
+        const from = document.getElementById('fromLoc').value;
+        const to   = document.getElementById('toLoc').value;
+        document.getElementById('fromLocDisplay')
+                .textContent = from;
+        document.getElementById('toLocDisplay')
+                .textContent = to;
+    }
+
+    function setStatus(status) {
+        currentStatus = status;
+        const steps = ['draft','waiting','ready','done'];
+        const idx   = steps.indexOf(status);
+        steps.forEach((s, i) => {
+            const el = document.getElementById(`step-${s}`);
+            if (!el) return;
+            el.className = 'flow-step';
+            if (i < idx)        el.classList.add('done');
+            else if (i === idx) el.classList.add('active');
+        });
+    }
+
+    function validateTransfer() {
+        const map = {
+            draft:   ['waiting', '⏳ Waiting!',   'warning'],
+            waiting: ['ready',   '✅ Ready!',      'success'],
+            ready:   ['done',    '🎉 Done!',       'success'],
+            done:    [null,      '⚠️ Completed!',  'warning']
+        };
+        const [next, msg, type] = map[currentStatus];
+        if (next) setStatus(next);
+        showToastMsg(msg, type);
+    }
+
+    function cancelTransfer() {
+        setStatus('draft');
+        showToastMsg('❌ Cancelled!', 'warning');
+    }
+
+    function printTransfer() {
+        showToastMsg('🖨️ Printing...', 'success');
+        setTimeout(() => window.print(), 500);
+    }
+
+    function addProduct() {
+        const rows = document.getElementById('productRows');
+        const row  = document.createElement('div');
+        row.className = 'product-row';
+        row.innerHTML = `
+            <input type="text" placeholder="Product name">
+            <input type="number" placeholder="0" min="0">
+            <select>
+                <option>pcs</option>
+                <option>kg</option>
+                <option>bags</option>
+                <option>boxes</option>
+            </select>
+            <button class="btn-remove"
+                    onclick="removeProduct(this)">🗑️</button>`;
+        rows.appendChild(row);
+    }
+
+    function removeProduct(btn) {
+        btn.closest('.product-row').remove();
+    }
+
+    function searchTransfer(q) {
+        document.querySelectorAll('#transferBody tr')
+                .forEach(row => {
+            row.style.display =
+                row.textContent.toLowerCase()
+                   .includes(q.toLowerCase())
+                ? '' : 'none';
+        });
+    }
+
+    function showToastMsg(msg, type) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className   = `toast toast-${type} show`;
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+</script>
+
+</body>
+</html>

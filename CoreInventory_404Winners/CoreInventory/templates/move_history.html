@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreInventory - Move History</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0f0c29, #302b63, #24243e);
+            padding: 20px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.3);
+        }
+
+        .sidebar-logo {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+
+        .sidebar-logo h2 {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .sidebar-logo p {
+            color: rgba(255,255,255,0.4);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 15px;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+            color: white;
+            box-shadow: 0 4px 15px rgba(161,140,209,0.5);
+        }
+
+        .ops-menu {
+            display: none;
+            padding-left: 15px;
+            margin-bottom: 5px;
+        }
+
+        .ops-menu.open { display: block; }
+
+        .ops-menu .nav-item {
+            font-size: 13px;
+            padding: 10px 15px;
+        }
+
+        .main {
+            margin-left: 250px;
+            padding: 30px;
+            width: calc(100% - 250px);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 25px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 15px 40px rgba(161,140,209,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '📋';
+            position: absolute;
+            right: 180px;
+            top: -10px;
+            font-size: 100px;
+            opacity: 0.1;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .page-header p {
+            opacity: 0.9;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .header-stat {
+            text-align: center;
+            background: rgba(255,255,255,0.25);
+            padding: 12px 22px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .header-stat .num {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .header-stat .lbl {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 10px 15px;
+            gap: 8px;
+            flex: 1;
+            max-width: 300px;
+            transition: all 0.3s;
+        }
+
+        .search-box:focus-within {
+            border-color: #a18cd1;
+            box-shadow: 0 0 0 3px rgba(161,140,209,0.1);
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .filter-btn {
+            padding: 9px 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: #555;
+        }
+
+        .filter-btn:hover {
+            border-color: #a18cd1;
+            color: #a18cd1;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(161,140,209,0.3);
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead {
+            background: linear-gradient(135deg, #faf5ff, #f3e8ff);
+        }
+
+        th {
+            text-align: left;
+            font-size: 12px;
+            color: #7c3aed;
+            font-weight: 800;
+            padding: 14px 15px;
+            border-bottom: 2px solid #e9d5ff;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        td {
+            padding: 15px;
+            font-size: 13px;
+            color: #333;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        tr.move-receipt td {
+            background: #f0fdf9;
+            border-left: 4px solid #11998e;
+        }
+
+        tr.move-receipt:hover td { background: #dcfce7; }
+
+        tr.move-delivery td {
+            background: #fff5f5;
+            border-left: 4px solid #eb3349;
+        }
+
+        tr.move-delivery:hover td { background: #fee2e2; }
+
+        tr.move-adjustment td { background: #fffbeb; }
+        tr.move-adjustment:hover td { background: #fef3c7; }
+
+        .move-type {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .type-receipt {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+        }
+
+        .type-delivery {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+        }
+
+        .type-adjustment {
+            background: linear-gradient(135deg, #fff3cd, #ffeeba);
+            color: #856404;
+        }
+
+        .qty-in  { color: #11998e; font-weight: 800; }
+        .qty-out { color: #eb3349; font-weight: 800; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <h2>📦 CoreInventory</h2>
+        <p>Smart Warehouse Management</p>
+    </div>
+    <a href="/dashboard" class="nav-item">
+        <span>🏠</span> Dashboard
+    </a>
+    <div class="nav-item" onclick="toggleOps()">
+        <span>⚙️</span> Operations
+        <span id="opsArrow"
+              style="margin-left:auto;font-size:11px">▼</span>
+    </div>
+    <div class="ops-menu" id="opsMenu">
+        <a href="/receipts" class="nav-item">
+            <span>📥</span> Receipts
+        </a>
+        <a href="/delivery" class="nav-item">
+            <span>🚚</span> Delivery
+        </a>
+        <a href="/adjustment" class="nav-item">
+            <span>✏️</span> Adjustment
+        </a>
+    </div>
+    <a href="/transfer" class="nav-item">
+        <span>🔄</span> Internal Transfer
+    </a>
+    <a href="/stock" class="nav-item">
+        <span>📦</span> Stock
+    </a>
+    <a href="/move_history" class="nav-item active">
+        <span>📋</span> Move History
+    </a>
+    <a href="/settings" class="nav-item">
+        <span>🔧</span> Settings
+    </a>
+    <a href="/logout" class="nav-item" style="margin-top:10px;">
+        <span>🚪</span> Logout
+    </a>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+    <div class="page-header">
+        <div>
+            <h1>📋 Move History</h1>
+            <p>Complete log of all stock movements</p>
+        </div>
+        <div class="header-stat">
+            <div class="num">
+                {{ movements|length if movements else '0' }}
+            </div>
+            <div class="lbl">Total Moves</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="filter-bar">
+            <div class="search-box">
+                <span>🔍</span>
+                <input type="text"
+                       placeholder="Search movements..."
+                       oninput="filterMoves(this.value)">
+            </div>
+            <button class="filter-btn active"
+                    onclick="filterByType('all', this)">
+                All
+            </button>
+            <button class="filter-btn"
+                    onclick="filterByType('receipt', this)">
+                📥 Receipts
+            </button>
+            <button class="filter-btn"
+                    onclick="filterByType('delivery', this)">
+                🚚 Deliveries
+            </button>
+            <button class="filter-btn"
+                    onclick="filterByType('adjustment', this)">
+                ✏️ Adjustments
+            </button>
+        </div>
+
+        {% if movements %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Quantity</th>
+                    <th>Note</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="movementsBody">
+                {% for move in movements %}
+                <tr class="move-{{ move.type }}"
+                    data-type="{{ move.type }}">
+                    <td><strong>#{{ move.id }}</strong></td>
+                    <td>{{ move.product_name }}</td>
+                    <td>
+                        <span class="move-type type-{{ move.type }}">
+                            {% if move.type == 'receipt' %}
+                                📥 Receipt
+                            {% elif move.type == 'delivery' %}
+                                🚚 Delivery
+                            {% else %}
+                                ✏️ Adjustment
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        {% if move.type == 'receipt' %}
+                        <span class="qty-in">
+                            +{{ move.quantity }}
+                        </span>
+                        {% elif move.type == 'delivery' %}
+                        <span class="qty-out">
+                            -{{ move.quantity }}
+                        </span>
+                        {% else %}
+                        <span class="{% if move.quantity >= 0 %}qty-in{% else %}qty-out{% endif %}">
+                            {{ move.quantity }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>{{ move.note or '-' }}</td>
+                    <td>{{ move.date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>No movements yet!</h3>
+            <p>Start adding receipts or deliveries</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    let currentFilter = 'all';
+    let currentSearch = '';
+
+    function toggleOps() {
+        const menu  = document.getElementById('opsMenu');
+        const arrow = document.getElementById('opsArrow');
+        menu.classList.toggle('open');
+        arrow.textContent =
+            menu.classList.contains('open') ? '▲' : '▼';
+    }
+
+    function filterByType(type, btn) {
+        currentFilter = type;
+        document.querySelectorAll('.filter-btn')
+                .forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilters();
+    }
+
+    function filterMoves(q) {
+        currentSearch = q;
+        applyFilters();
+    }
+
+    function applyFilters() {
+        document.querySelectorAll('#movementsBody tr')
+                .forEach(row => {
+            const typeMatch =
+                currentFilter === 'all' ||
+                row.dataset.type === currentFilter;
+            const searchMatch =
+                currentSearch === '' ||
+                row.textContent.toLowerCase()
+                   .includes(currentSearch.toLowerCase());
+            row.style.display =
+                typeMatch && searchMatch ? '' : 'none';
+        });
+    }
+</script>
+
+</body>
+</html>
